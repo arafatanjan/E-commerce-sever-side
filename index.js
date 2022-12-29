@@ -9,11 +9,37 @@ const ObjectId = require('mongodb').ObjectId;
 //mydbuser1
 // EjfkxOaI3MFyBR4r
 //mddleware
-app.use(cors());
+app.use(cors({
+    origin: "*",
+}));
 app.use(express.json());
 // const handler = (req, res) => {
 
 // app.get('/', handler);
+const allowCors = fn => async (req, res) => {
+    res.setHeader('Access-Control-Allow-Credentials', true)
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    // another common pattern
+    // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    )
+    if (req.method === 'OPTIONS') {
+        res.status(200).end()
+        return
+    }
+    return await fn(req, res)
+}
+
+const handler = (req, res) => {
+    const d = new Date()
+    res.end(d.toString())
+}
+
+module.exports = allowCors(handler)
+
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -23,7 +49,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
         const database = client.db("foodcluster");
         // const database = client.db("foodmaster");
         const usersCollection = database.collection("users");
@@ -106,6 +132,7 @@ async function run() {
         });
 
         app.put('/users/admin', async (req, res) => {
+            res.header("Access-Control-Allow-Origin", "*");
             const user = req.body;
 
             console.log('Hit the post', user);
